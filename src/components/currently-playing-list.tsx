@@ -6,7 +6,8 @@ import { getBackgroundColorFromType } from '~/lib/utils';
 // import { LoggerContext } from '~/contexts/logger-provider';
 
 export default function CurrentlyPlayingList() {
-  const { queuedClips, playingClips, stoppingClips, clipTempo } = useContext(AbletonContext);
+  const { queuedClips, playingClips, stoppingClips, clipTempo, triggerCauldronSample } =
+    useContext(AbletonContext);
   // const { logger } = useContext(LoggerContext);
 
   return (
@@ -106,7 +107,11 @@ export default function CurrentlyPlayingList() {
         })}
       </div>
 
-      <div data-testid='cauldron' className='scale-95 absolute top-[20%] left-[36.5%] h-[400px]'>
+      <div
+        data-testid='cauldron'
+        className='scale-95 absolute top-[20%] left-[36.5%] h-[400px] transition-transform duration-150 ease-out active:scale-90'
+        onPointerDown={triggerCauldronSample}
+      >
         <img
           className='object-scale-down h-full'
           src='/images/cauldron-hottub-crop.gif'

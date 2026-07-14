@@ -17,6 +17,7 @@ export const AbletonContext = createContext({
   changeMasterKey: (_) => null,
   keylock: true,
   changeKeylock: (_) => null,
+  triggerCauldronSample: () => null,
 } as {
   getTracksAndClips: () => void;
   changeTempo: (x: number) => void;
@@ -31,6 +32,7 @@ export const AbletonContext = createContext({
   changeMasterKey: (key: string) => void;
   keylock: boolean;
   changeKeylock: (keylock: boolean) => void;
+  triggerCauldronSample: () => void;
 });
 
 function UpdateIndex(index: number, newValue: any, initialArray: any[]) {
@@ -153,6 +155,11 @@ export default function AbletonProvider({ children }: { children: ReactNode }) {
     });
   }
 
+  function triggerCauldronSample() {
+    logger.debug('trigger_cauldron_sample');
+    socket?.emit('trigger_cauldron_sample');
+  }
+
   return (
     <AbletonContext.Provider
       value={{
@@ -169,6 +176,7 @@ export default function AbletonProvider({ children }: { children: ReactNode }) {
         changeMasterKey,
         keylock,
         changeKeylock,
+        triggerCauldronSample,
       }}
     >
       {children}

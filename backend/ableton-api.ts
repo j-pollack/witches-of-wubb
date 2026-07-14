@@ -1,5 +1,6 @@
 import { Ableton } from 'ableton-js';
 import { Track } from 'ableton-js/ns/track';
+import { Clip } from 'ableton-js/ns/clip';
 import { DeviceParameter } from 'ableton-js/ns/device-parameter';
 import * as socketio from 'socket.io';
 import * as nodeOSC from 'node-osc';
@@ -30,6 +31,8 @@ export let cleanUpPhraseLeaderEventListener: any;
 
 export let keyLockEnabled = true;
 export let masterKey = '';
+export let drumRackClips: Clip[];
+const DRUM_RACK_TRACK_INDEX = parseInt(process.env.DRUM_RACK_TRACK_INDEX as string, 10);
 export const stoppingClips: ClipList = [];
 export const playingClips: ClipList = [];
 export const queuedClips: ClipList = [];
@@ -44,7 +47,39 @@ export async function StartAbleton() {
   await ableton.start();
   await GetTracksAndClips();
   await GetTrackVolumes();
+  await GetDrumRackClips();
 }
+
+export async function GetDrumRackClips() {
+  logger.info('Fetching drum rack clips from Ableton');
+  const track = tracks[DRUM_RACK_TRACK_INDEX];
+  if (!track) {
+    logger.warn(`No drum rack track found at index ${DRUM_RACK_TRACK_INDEX}`);
+    drumRackClips = [];
+    return drumRackClips;
+  }
+  const clipSlots = await track.get('clip_slots');
+  const clips = await Promise.all(clipSlots.map((cs) => cs.get('clip')));
+  drumRackClips = clips.filter((clip): clip is Clip => clip !== null);
+  logger.info(`Found ${drumRackClips.length} drum rack clips on track "${track.raw.name}"`);
+  return drumRackClips;
+}
+
+export const TriggerRandomDrumSample = throttle(
+  async function () {
+    if (!drumRackClips) await GetDrumRackClips();
+    if (!drumRackClips.length) {
+      logger.warn('No drum rack clips to trigger');
+      return;
+    }
+    const clip = drumRackClips[Math.floor(Math.random() * drumRackClips.length)];
+    logger.info(`Triggering drum sample "${clip.raw.name}"`);
+    EmitEvent('cauldron_sample_triggered', { clipName: clip.raw.name });
+    await clip.fire();
+  },
+  200,
+  { trailing: false },
+);
 
 export async function handleTimeout() {
   for (let i = 0; i < 4; i++) {

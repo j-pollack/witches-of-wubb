@@ -14,6 +14,7 @@ import {
   SetTempo,
   SetTrackVolume,
   StopOrRemoveClipFromQueue,
+  TriggerRandomDrumSample,
   playingClips,
   queuedClips,
   trackVolumes,
@@ -176,6 +177,9 @@ export function AddSocketEventsHandlers(socket: Socket) {
   });
   socket.on('set_master-key', (newKey: string) => {
     SetMasterKey(newKey);
+  });
+  socket.on('trigger_cauldron_sample', () => {
+    TriggerRandomDrumSample();
   });
   return socket;
 }
